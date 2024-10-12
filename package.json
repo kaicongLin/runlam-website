@@ -18,7 +18,10 @@
     "@docusaurus/core": "3.5.2",
     "@docusaurus/preset-classic": "3.5.2",
     "@mdx-js/react": "^3.0.0",
+    "antd": "^5.21.3",
     "clsx": "^2.0.0",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "prism-react-renderer": "^2.3.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
