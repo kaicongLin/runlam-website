@@ -3,5 +3,15 @@
 }
 
 .upload-button {
-    margin-bottom: 10px;
+    margin: 10px 0;
+}
+
+.export-warp {
+    display: flex;
+}
+
+.excel-preview {
+    border: 1px solid #ccc;
+    width: 80vw;   
+    height: 600px;
 }
