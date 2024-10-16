@@ -95,4 +95,8 @@ export type BasicInfoFieldType = {
   invoice_no?: string;
   packing_list_no?: string;
   case_number?: string;
+  roll_qty?: string;
+  unit?: string;
+  width?: string;
+  meas?: string;
 };

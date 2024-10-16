@@ -12,6 +12,34 @@
 
 .excel-preview {
     border: 1px solid #ccc;
-    width: 80vw;   
+    width: 75vw;   
     height: 600px;
 }
+
+.basic-info-wrap {
+    display: flex;
+    flex: 1;
+    margin-left: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.basic-info-form {
+    width: 100%;
+}
+
+.block-title {
+    margin-bottom: 15px;
+    font-weight: bold;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+}
+.block-title::before {
+    display: inline-block;
+    content: '';
+    width: 4px;
+    height: 14px;
+    background-color: #1677ff;
+    margin-right: 6px;
+  }

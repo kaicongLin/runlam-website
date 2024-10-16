@@ -1,8 +1,9 @@
 import ExcelJS from "exceljs";
 import { IDeliveryItem, IDeliveryItems } from "./intefaces";
 import {
-  sheetName,
+  SHEET_NAME,
   deliveryExcelCloumnsMap,
+  deliveryExcelColumns
 } from "./data";
 
 /**
@@ -29,7 +30,7 @@ export const readDeliveryExcel = async (
         // 加载 Excel 文件内容
         await workbook.xlsx.load(buffer);
         // 按照工作表名称获取工作表
-        const worksheet = workbook.getWorksheet(sheetName);
+        const worksheet = workbook.getWorksheet(SHEET_NAME);
         const data: IDeliveryItem[] = [];
         // 遍历工作表的每一行
         worksheet.eachRow((row, rowNumber) => {
@@ -83,3 +84,46 @@ export const downloadFile = (data: any, filename?: string) => {
   document.body.removeChild(aLink);
   URL.revokeObjectURL(blob);
 };
+
+/**
+ * 字母转数字
+ * @param letters
+ * @returns
+ */
+export function letterToNumber(letters: string) {
+  let result = 0;
+  const base = 26;
+  for (let i = 0; i < letters.length; i++) {
+    const charCode = letters.charCodeAt(i) - 64;
+    result += charCode * Math.pow(base, letters.length - i - 1);
+  }
+  return result;
+}
+
+/**
+ * 数字转字母
+ * @param number
+ * @returns
+ */
+export function numberToLetter(number: number) {
+  let result = '';
+  let n = number;
+  const base = 26;
+  while (n > 0) {
+    n--;
+    let remainder = n % base;
+    result = String.fromCharCode(remainder + 65) + result;
+    n = Math.floor(n / base);
+  }
+  return result || 'A';
+}
+
+/**
+ * 获取列字母(默认表格从A开始)
+ * @param key
+ * @returns
+ */
+export function getColumnsLetter(key: string) {
+  const number = deliveryExcelColumns.findIndex((item) => item.key === key) + 1;
+  return numberToLetter(number);
+}
