@@ -1,6 +1,7 @@
 import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
+import univerPlugin from "./plugins/univer-plugin";
 
 const config: Config = {
   title: "My Site",
@@ -138,34 +139,9 @@ const config: Config = {
     },
   } satisfies Preset.ThemeConfig,
 
-  scripts: [
-    {
-      src: "https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/js/plugin.js",
-      async: true,
-    },
-    {
-      src: "https://cdn.jsdelivr.net/npm/luckysheet/dist/luckysheet.umd.js",
-      async: true,
-    },
-  ],
-  stylesheets: [
-    {
-      href: "https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/css/pluginsCss.css",
-      async: true,
-    },
-    {
-      href: "https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/plugins.css",
-      async: true,
-    },
-    {
-      href: "https://cdn.jsdelivr.net/npm/luckysheet/dist/css/luckysheet.css",
-      async: true,
-    },
-    {
-      href: "https://cdn.jsdelivr.net/npm/luckysheet/dist/assets/iconfont/iconfont.css",
-      async: true,
-    }
-  ],
+  plugins: [
+    [univerPlugin, {}]
+  ]
 };
 
 export default config;

@@ -85,6 +85,11 @@ export const exportLSPackingList = async (
   // 填充基础信息
   fillBasicInfo(worksheet, basicValues);
 
+  if (data.length < 1) {
+    const buffer = await workbook.xlsx.writeBuffer();
+    return buffer;
+  }
+
   // 箱号，自动递增初始值
   let case_number_index = -1;
 

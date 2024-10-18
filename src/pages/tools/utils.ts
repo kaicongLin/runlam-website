@@ -86,6 +86,18 @@ export const downloadFile = (data: any, filename?: string) => {
 };
 
 /**
+ * buffer流转文件流
+ * @param buffer 
+ * @param fileName 
+ * @param mimeType 
+ * @returns 
+ */
+export const bufferToFile = (buffer: ArrayBuffer, fileName: string, mimeType?: string) => {
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  return new File([blob], fileName, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+};
+
+/**
  * 字母转数字
  * @param letters
  * @returns

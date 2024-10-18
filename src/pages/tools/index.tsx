@@ -10,8 +10,7 @@ import BasicInfo from "./BasicInfo";
 import { readDeliveryExcel, downloadFile } from "./utils";
 import _ from "lodash";
 import { exportLSPackingList } from "./exportPackingList";
-import LuckyExcel from "luckyexcel";
-
+import UniverSheet from "./UniverSheet";
 interface basicInfoRefProps {
   getFieldsValue: () => BasicInfoFieldType;
 }
@@ -78,45 +77,6 @@ export default function Hello() {
     fileCount.current = 0;
   };
 
-  const createExcel = () => {
-    LuckyExcel.transformExcelToLucky(
-      buffer,
-      function (exportJson, lunckysheetfile) {
-        console.log(exportJson);
-        console.log(lunckysheetfile);
-        console.log(window.luckysheet);
-        if (window.luckysheet && window.luckysheet.create) {
-          window.luckysheet?.create({
-            container: "luckysheet", //luckysheet is the container id
-            lang: "zh",
-            allowCopy: false, //是否允许拷贝
-            showtoolbar: false, //是否显示工具栏
-            showinfobar: false, //是否显示顶部信息栏
-            showsheetbar: false, //是否显示底部sheet页按钮
-            showstatisticBar: false, //是否显示底部计数栏
-            showstatisticBarConfig: {},
-            enableAddRow: false, //是否允许添加行
-            enableAddCol: false, //是否允许添加列
-            // // showRowBar: false, // 是否显示行号区域
-            // // showColumnBar: false, // 是否显示列号区域
-            enableAddBackTop: false, //是否允需回到顶部
-            sheetFormulaBar: false, //是否显示公示栏
-            allowEdit: false, //是否允许编辑
-            // rowHeaderWidth: 0, //纵坐标
-            // columnHeaderHeight: 0, //横坐标
-            // devicePixelRatio: 10, //设置比例
-            data: exportJson.sheets,
-            hook: {
-              workbookCreateAfter: () => {
-                console.log("workbookCreateAfter------------");
-              },
-            },
-          });
-        }
-      }
-    );
-  };
-
   useEffect(() => {
     // 遍历对象的键值对
     const columns = [];
@@ -140,13 +100,12 @@ export default function Hello() {
           </Upload>
         </div>
         <Button onClick={handleClearData}>清空上传数据</Button>
-        <Button onClick={createExcel}>初始化</Button>
 
         <Table columns={columns} dataSource={dataSource} />
 
         <div className={styles["export-warp"]}>
           <div className={styles["excel-preview"]}>
-          <div id="luckysheet" className={styles['preiew-luckysheet']}></div>
+            <UniverSheet buffer={buffer}/>
           </div>
           <BasicInfo
             ref={basicInfoRef}
