@@ -71,7 +71,7 @@ const fillBasicInfo = (worksheet: ExcelJS.Worksheet, basicValues: BasicInfoField
     };
 }
 
-export const exportLSPackingList = async (
+export const generateLSPackingList = async (
   basicValues: BasicInfoFieldType,
   data: IDeliveryItems[]
 ) => {
@@ -86,8 +86,9 @@ export const exportLSPackingList = async (
   fillBasicInfo(worksheet, basicValues);
 
   if (data.length < 1) {
-    const buffer = await workbook.xlsx.writeBuffer();
-    return buffer;
+    // const buffer = await workbook.xlsx.writeBuffer();
+    // return buffer;
+    return workbook;
   }
 
   // 箱号，自动递增初始值
@@ -225,7 +226,7 @@ export const exportLSPackingList = async (
         name: "Tahoma",
         size: 10,
         bold: true,
-        color: { argb: "FF0000" },
+        color: { argb: "FFFF0000" },
       };
     });
   });
@@ -282,7 +283,7 @@ export const exportLSPackingList = async (
       name: "Tahoma",
       size: 10,
       bold: true,
-      color: { argb: "FF0000" },
+      color: { argb: "FFFF0000" },
     };
   })
 
@@ -310,6 +311,8 @@ export const exportLSPackingList = async (
   });
 
   // 生成新的 Excel 文件
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer;
+  // const buffer = await workbook.xlsx.writeBuffer();
+  // return buffer;
+
+  return workbook;
 };

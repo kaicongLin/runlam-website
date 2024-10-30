@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import Layout from "@theme/Layout";
+import ExcelJS from "exceljs";
 import { UploadOutlined } from "@ant-design/icons";
 import type { UploadFile, UploadProps } from "antd";
 import { Button, message, Table, Upload } from "antd";
@@ -9,8 +10,9 @@ import styles from "./index.module.css";
 import BasicInfo from "./BasicInfo";
 import { readDeliveryExcel, downloadFile } from "./utils";
 import _ from "lodash";
-import { exportLSPackingList } from "./exportPackingList";
+import { generateLSPackingList } from "./exportPackingList";
 import UniverSheet from "./UniverSheet";
+
 interface basicInfoRefProps {
   getFieldsValue: () => BasicInfoFieldType;
 }
@@ -20,6 +22,7 @@ export default function Hello() {
   const [columns, setColumns] = React.useState<any[]>([]);
   const [fileList, setFileList] = React.useState<UploadFile[]>([]);
   const [buffer, setBuffer] = React.useState<ArrayBuffer>();
+  const [workbook, setWorkbook] = React.useState<ExcelJS.Workbook | null>(null);
 
   const fileCount = useRef<number>(0);
   const basicInfoRef = useRef<basicInfoRefProps>();
@@ -49,18 +52,30 @@ export default function Hello() {
           `total ${info.fileList.length} file uploaded successfully.`
         );
 
-        // 生成新的 Excel 文件
-        const basicValues = basicInfoRef.current?.getFieldsValue();
-        const buffer = await exportLSPackingList(basicValues, res);
-        setBuffer(buffer);
+        generate(res);
       }
     },
   };
 
+  /**
+   *  生成装箱单模板
+   */
+  const generate = async (newData?: IDeliveryItems[]) => {
+    const basicValues = basicInfoRef.current?.getFieldsValue();
+    // 生成新的 装箱单的 workbook 对象
+    const workbook = await generateLSPackingList(basicValues, newData ?? data)
+    const buffer = await workbook.xlsx.writeBuffer();
+    setBuffer(buffer);
+    setWorkbook(workbook);
+  };
+
+
+  /**
+   *  导出装箱单
+   */
   const handleExportPackingList = async () => {
     const basicValues = basicInfoRef.current?.getFieldsValue();
-    // 生成新的 Excel 文件并下载
-    const buffer = await exportLSPackingList(basicValues, data);
+    // workbook 转成 buffer 文件并下载
     const totalRollNumber = data.reduce(
       (acc, cur) => acc + cur.deliveryList.length,
       0
@@ -71,6 +86,9 @@ export default function Hello() {
     );
   };
 
+  /**
+   * 清空数据
+   */
   const handleClearData = () => {
     setData([]);
     setFileList([]);
@@ -88,7 +106,10 @@ export default function Hello() {
       });
     }
     setColumns(columns);
+    // handleExportPackingList();
+    generate();
   }, []);
+
 
   const dataSource = _.flatMap(data, (item) => item.deliveryList);
   return (
@@ -105,7 +126,7 @@ export default function Hello() {
 
         <div className={styles["export-warp"]}>
           <div className={styles["excel-preview"]}>
-            <UniverSheet buffer={buffer}/>
+            <UniverSheet buffer={buffer} workBook={workbook} />
           </div>
           <BasicInfo
             ref={basicInfoRef}

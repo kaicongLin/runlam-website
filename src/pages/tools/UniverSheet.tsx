@@ -20,25 +20,23 @@ import { UniverSheetsFormulaPlugin } from "@univerjs/sheets-formula";
 import { UniverSheetsFormulaUIPlugin } from "@univerjs/sheets-formula-ui";
 import { UniverSheetsUIPlugin } from "@univerjs/sheets-ui";
 import { zhCN, enUS } from "univer:locales";
-
-import { FUniver } from "@univerjs-pro/facade";
-
+import { FUniver } from "@univerjs/facade";
+ 
 import React, { useEffect, useRef } from "react";
-import { DEFAULT_WORKBOOK_DATA } from "./default-workbook-data";
-import { bufferToFile } from "./utils";
+import { convertExceljsToUniver } from "./utils";
 import styles from "./index.module.css";
+import { DEFAULT_WORKBOOK_DATA } from './default-workbook-data';
 
 import ExcelJS from "exceljs";
 
-const UniverSheet = ({ buffer }: { buffer: ArrayBuffer }) => {
+const UniverSheet = ({ buffer, workBook }: { buffer: ArrayBuffer, workBook: ExcelJS.Workbook }) => {
   const containerRef = useRef(null);
 
-  const init = (buffer: ArrayBuffer) => {
+  const init = (workBook: ExcelJS.Workbook) => {
     if (!containerRef.current) {
       throw Error("container not initialized");
     }
 
-    console.log("init univer", zhCN);
     const univer = new Univer({
       theme: defaultTheme,
       locale: LocaleType.ZH_CN,
@@ -65,29 +63,36 @@ const UniverSheet = ({ buffer }: { buffer: ArrayBuffer }) => {
     univer.registerPlugin(UniverSheetsFormulaPlugin);
     univer.registerPlugin(UniverSheetsFormulaUIPlugin);
 
-    const file = bufferToFile(buffer, "test.xlsx");
-    console.log(file);
-    const univerAPI = FUniver.newAPI(univer);
-    if (file) {
-      // univerAPI.value.importXLSXToSnapshot(file).then((res) => {
-        // console.log(res);
-      // })
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Sheet1");
-      worksheet.getCell("A1").value = "Hello World";
-      // const fdata = workbook.xlsx.writeFile("new_example.xlsx");
-      console.log('worksheet', worksheet);
+    console.log('workBook', workBook);
     
-      console.log(workbook, 'workbook');
-      
-    }
+    if (workBook) {
+      // univerAPI.value.importXLSXToSnapshot(file).then((res) => {
+      // })
+      const excelData = convertExceljsToUniver(workBook);
 
-    univer.createUnit(UniverInstanceType.UNIVER_SHEET, DEFAULT_WORKBOOK_DATA);
+      univer.createUnit(UniverInstanceType.UNIVER_SHEET, excelData);
+      // 设置其他属性
+      const univerAPI = FUniver.newAPI(univer);
+      const sheet = univerAPI.getActiveWorkbook()?.getActiveSheet();
+      const sheetName = sheet.getSheetName();
+
+      const ExceljsWorkSheet = workBook.getWorksheet(sheetName)
+      ExceljsWorkSheet.columns.forEach((c) => {
+        sheet?.setColumnWidth(c.number - 1, c.width * 6);
+      });
+      (ExceljsWorkSheet as any)._rows.forEach((r) => {
+        sheet?.setRowHeight(r.number - 1, r.height);
+      })
+
+      console.log(sheet);
+
+      // sheet?.setRowHeights(11, 1000, 80);
+    }
   };
 
   useEffect(() => {
-    init(buffer);
-  }, [buffer]);
+    init(workBook);
+  }, [workBook]);
 
   return <div ref={containerRef} className={styles["univer-container"]} />;
 };
