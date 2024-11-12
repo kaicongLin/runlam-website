@@ -140,7 +140,8 @@ const config: Config = {
   } satisfies Preset.ThemeConfig,
 
   plugins: [
-    [univerPlugin, {}]
+    [univerPlugin, {}],
+    'docusaurus-plugin-sass'
   ]
 };
 

@@ -1,9 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import Layout from "@theme/Layout";
 import ExcelJS from "exceljs";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  ClearOutlined,
+  InfoCircleOutlined,
+} from "@ant-design/icons";
 import type { UploadFile, UploadProps } from "antd";
-import { Button, message, Table, Upload } from "antd";
+import { Button, message, Table, Upload, Affix } from "antd";
 import { IDeliveryItems, BasicInfoFieldType } from "./intefaces";
 import { deliveryExcelCloumnsMap } from "./data";
 import styles from "./index.module.css";
@@ -23,6 +27,7 @@ export default function Hello() {
   const [fileList, setFileList] = React.useState<UploadFile[]>([]);
   const [buffer, setBuffer] = React.useState<ArrayBuffer>();
   const [workbook, setWorkbook] = React.useState<ExcelJS.Workbook | null>(null);
+  const removeFlag = useRef<boolean>(false);
 
   const fileCount = useRef<number>(0);
   const basicInfoRef = useRef<basicInfoRefProps>();
@@ -30,45 +35,79 @@ export default function Hello() {
   const props: UploadProps = {
     name: "file",
     multiple: true,
-    showUploadList: false,
+    // showUploadList: false,
     fileList: fileList,
     accept:
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel",
     customRequest: async (options: any) => {
       const { onSuccess, file } = options;
       onSuccess({ status: "success", response: file });
+      return {
+        abort() {},
+      };
     },
     onChange: async (info) => {
-      // 记录已上传的文件数量
+      if (removeFlag.current) {
+        removeFlag.current = false;
+        return;
+      }
       fileCount.current++;
-      // 当所有文件都上传完成后，读取 Excel 文件
-      if (fileCount.current === info.fileList.length) {
-        const res = await readDeliveryExcel(
-          info.fileList.map((file) => file.originFileObj)
-        );
-        setData(res);
-        setFileList(info.fileList);
+      const allDone = info.fileList.every((file) => file.status === "done");
+      if (fileCount.current === info.fileList.length && !allDone) {
+        const uploadingCount = info.fileList.filter(
+          (f) => f.status === "uploading"
+        ).length;
+        const newFileList: UploadFile[] = info.fileList.map((f) => ({
+          ...f,
+          status: "done",
+        }));
+        setFileList(newFileList);
+        fileCount.current -= uploadingCount;
+      }
+
+      // 读取 Excel 文件
+      if (fileCount.current === info.fileList.length && allDone) {
         message.success(
-          `total ${info.fileList.length} file uploaded successfully.`
+          `total ${info.fileList.length} file load successfully.`
         );
 
-        generate(res);
+        // 生成装箱单
+        generate(info.fileList);
       }
+    },
+    onRemove: async (file) => {
+      const newFileList = fileList.filter((f) => f.uid !== file.uid);
+      setFileList(newFileList);
+      message.success(`remove ${file.name} file successfully.`);
+      fileCount.current--;
+      removeFlag.current = true;
+      // 重新生成装箱单
+      generate(newFileList);
     },
   };
 
   /**
    *  生成装箱单模板
    */
-  const generate = async (newData?: IDeliveryItems[]) => {
+  const generate = async (fileList?: UploadFile<any>[]) => {
     const basicValues = basicInfoRef.current?.getFieldsValue();
+    let data = [];
+    // 如果有文件列表，则读取文件内容
+    console.log(fileList);
+
+    if (fileList) {
+      data = await readDeliveryExcel(
+        fileList.map((file) => file.originFileObj)
+      );
+      setData(data);
+    }
+
     // 生成新的 装箱单的 workbook 对象
-    const workbook = await generateLSPackingList(basicValues, newData ?? data)
+    const workbook = await generateLSPackingList(basicValues, data);
     const buffer = await workbook.xlsx.writeBuffer();
     setBuffer(buffer);
     setWorkbook(workbook);
   };
-
 
   /**
    *  导出装箱单
@@ -93,6 +132,7 @@ export default function Hello() {
     setData([]);
     setFileList([]);
     fileCount.current = 0;
+    generate();
   };
 
   useEffect(() => {
@@ -110,28 +150,53 @@ export default function Hello() {
     generate();
   }, []);
 
-
   const dataSource = _.flatMap(data, (item) => item.deliveryList);
   return (
     <Layout title="Hello" description="Hello React Page">
       <div className={styles["delivery-wrap"]}>
-        <div className={styles["upload-button"]}>
-          <Upload {...props}>
-            <Button icon={<UploadOutlined />}>请上传送货单</Button>
-          </Upload>
-        </div>
-        <Button onClick={handleClearData}>清空上传数据</Button>
-
-        <Table columns={columns} dataSource={dataSource} />
-
-        <div className={styles["export-warp"]}>
+        {/* <Table columns={columns} dataSource={dataSource} /> */}
+        <div className={styles["delivery-content"]}>
           <div className={styles["excel-preview"]}>
             <UniverSheet buffer={buffer} workBook={workbook} />
           </div>
-          <BasicInfo
-            ref={basicInfoRef}
-            onExportPackingList={handleExportPackingList}
-          />
+          <div className={styles["deliver-right"]}>
+            <div className={styles["first"]}>
+              <span style={{ marginRight: "8px" }}>
+                <div className={styles["step"]}>1</div>
+                上传送货单
+              </span>
+              <Upload {...props}>
+                <Button type="primary" icon={<UploadOutlined />}>
+                  Upload
+                </Button>
+                {/* <InfoCircleOutlined /> */}
+                {/* <Button icon={<ClearOutlined />} onClick={handleClearData}>
+                清空上传数据
+              </Button> */}
+              </Upload>
+            </div>
+            <div className={styles['second']}>
+              <div className={styles["step"]}>2</div>
+              修改核对字段信息
+
+              <BasicInfo
+              ref={basicInfoRef}
+              onFormValueChange={_.debounce(() => generate(fileList), 500)}
+            />
+            </div>
+
+            <div className={styles["third"]}>
+              <span style={{ marginRight: "8px" }}>
+                <div className={styles["step"]}>3</div>
+                导出装箱单
+              </span>
+              <Affix offsetBottom={0}>
+                <Button type="primary" onClick={handleExportPackingList}>
+                  导出装箱单
+                </Button>
+              </Affix>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>

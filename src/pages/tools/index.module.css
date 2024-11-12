@@ -1,45 +1,71 @@
 .delivery-wrap {
-    padding: 24px;
+    padding: 12px;
 }
 
-.upload-button {
-    margin: 10px 0;
-}
-
-.export-warp {
+.delivery-content {
     display: flex;
-}
 
-.excel-preview {
-    /* position: relative; */
-    border: 1px solid #ccc;
-    width: 75vw;
-    /* height: 1000px;    */
-}
-.univer-container {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
+    .deliver-right {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        margin-left: 10px;
+        border: 1px solid #ccc;
+        padding: 10px;
 
-.basic-info-wrap {
-    display: flex;
-    flex: 1;
-    margin-left: 10px;
-    border: 1px solid #ccc;
-    padding: 10px;
-}
+        .step {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #1677ff;
+            color: #fff;
+            margin-bottom: 10px;
+        }
 
-.basic-info-form {
-    width: 100%;
+        .first {
+            /* margin-bottom: 10px; */
+        }
+
+        .basic-info-wrap {
+            /* margin-bottom: 10px; */
+            .basic-info-form {
+                width: 100%;
+                .mb-10 {
+                    margin-bottom: 10px;
+                }
+            }
+            
+        }
+        
+        .second {
+            margin-top: 10px;
+        }
+
+        .third{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    .excel-preview {
+        border: 1px solid #ccc;
+        width: 75vw;
+    }
+
+
 }
 
 .block-title {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 14px;
     display: flex;
     align-items: center;
+    margin-left: 8px;
 }
 .block-title::before {
     display: inline-block;
@@ -48,4 +74,11 @@
     height: 14px;
     background-color: #1677ff;
     margin-right: 6px;
-  }
+}
+
+
+.univer-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;    
+}
