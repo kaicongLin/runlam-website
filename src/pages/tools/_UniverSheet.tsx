@@ -24,7 +24,7 @@ import { FUniver } from "@univerjs/facade";
  
 import React, { useEffect, useRef } from "react";
 import { convertExceljsToUniver } from "./_utils";
-import styles from "./index.module.css";
+import styles from "./index.module.scss";
 
 import ExcelJS from "exceljs";
 

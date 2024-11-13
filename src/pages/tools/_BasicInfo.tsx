@@ -1,7 +1,7 @@
 import { Input, Form, InputNumber } from "antd";
 import React from "react";
 import { BasicInfoFieldType } from "./_intefaces";
-import styles from "./index.module.css";
+import styles from "./index.module.scss";
 
 type BasicInfoRefProps = {
   getFieldsValue: () => BasicInfoFieldType;

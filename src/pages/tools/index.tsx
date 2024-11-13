@@ -6,7 +6,7 @@ import type { UploadFile, UploadProps } from "antd";
 import { Button, message, Upload, Affix } from "antd";
 import { IDeliveryItems, BasicInfoFieldType } from "./_intefaces";
 import { deliveryExcelCloumnsMap } from "./_data";
-import styles from "./index.module.css";
+import styles from "./index.module.scss";
 import BasicInfo from "./_BasicInfo";
 import { readDeliveryExcel, downloadFile } from "./_utils";
 import _ from "lodash";
