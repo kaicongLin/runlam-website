@@ -1,12 +1,12 @@
 import ExcelJS from "exceljs";
 import moment from "moment";
-import { IDeliveryItems, BasicInfoFieldType } from "./intefaces";
+import { IDeliveryItems, BasicInfoFieldType } from "./_intefaces";
 import {
   deliveryExcelColumns,
   TABLE_START_ROW,
   productNumberToCompostionMap,
-} from "./data";
-import { getColumnsLetter } from "./utils";
+} from "./_data";
+import { getColumnsLetter } from "./_utils";
 
 const borderStyle: ExcelJS.Borders = {
   top: { style: "thin" },

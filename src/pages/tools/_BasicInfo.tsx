@@ -1,6 +1,6 @@
-import { Input, Button, Form, InputNumber, Affix } from "antd";
+import { Input, Form, InputNumber } from "antd";
 import React from "react";
-import { BasicInfoFieldType } from "./intefaces";
+import { BasicInfoFieldType } from "./_intefaces";
 import styles from "./index.module.css";
 
 type BasicInfoRefProps = {

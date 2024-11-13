@@ -1,21 +1,17 @@
 import React, { useEffect, useRef } from "react";
 import Layout from "@theme/Layout";
 import ExcelJS from "exceljs";
-import {
-  UploadOutlined,
-  ClearOutlined,
-  InfoCircleOutlined,
-} from "@ant-design/icons";
+import { UploadOutlined } from "@ant-design/icons";
 import type { UploadFile, UploadProps } from "antd";
-import { Button, message, Table, Upload, Affix } from "antd";
-import { IDeliveryItems, BasicInfoFieldType } from "./intefaces";
-import { deliveryExcelCloumnsMap } from "./data";
+import { Button, message, Upload, Affix } from "antd";
+import { IDeliveryItems, BasicInfoFieldType } from "./_intefaces";
+import { deliveryExcelCloumnsMap } from "./_data";
 import styles from "./index.module.css";
-import BasicInfo from "./BasicInfo";
-import { readDeliveryExcel, downloadFile } from "./utils";
+import BasicInfo from "./_BasicInfo";
+import { readDeliveryExcel, downloadFile } from "./_utils";
 import _ from "lodash";
-import { generateLSPackingList } from "./exportPackingList";
-import UniverSheet from "./UniverSheet";
+import { generateLSPackingList } from "./_exportPackingList";
+// import UniverSheet from "./_UniverSheet";
 
 interface basicInfoRefProps {
   getFieldsValue: () => BasicInfoFieldType;
@@ -157,7 +153,7 @@ export default function Hello() {
         {/* <Table columns={columns} dataSource={dataSource} /> */}
         <div className={styles["delivery-content"]}>
           <div className={styles["excel-preview"]}>
-            <UniverSheet buffer={buffer} workBook={workbook} />
+            {/* <UniverSheet workBook={workbook} /> */}
           </div>
           <div className={styles["deliver-right"]}>
             <div className={styles["first"]}>
@@ -175,14 +171,13 @@ export default function Hello() {
               </Button> */}
               </Upload>
             </div>
-            <div className={styles['second']}>
+            <div className={styles["second"]}>
               <div className={styles["step"]}>2</div>
               修改核对字段信息
-
               <BasicInfo
-              ref={basicInfoRef}
-              onFormValueChange={_.debounce(() => generate(fileList), 500)}
-            />
+                ref={basicInfoRef}
+                onFormValueChange={_.debounce(() => generate(fileList), 500)}
+              />
             </div>
 
             <div className={styles["third"]}>

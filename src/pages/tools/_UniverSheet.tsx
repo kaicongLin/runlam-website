@@ -23,13 +23,12 @@ import { zhCN, enUS } from "univer:locales";
 import { FUniver } from "@univerjs/facade";
  
 import React, { useEffect, useRef } from "react";
-import { convertExceljsToUniver } from "./utils";
+import { convertExceljsToUniver } from "./_utils";
 import styles from "./index.module.css";
-import { DEFAULT_WORKBOOK_DATA } from './default-workbook-data';
 
 import ExcelJS from "exceljs";
 
-const UniverSheet = ({ buffer, workBook }: { buffer: ArrayBuffer, workBook: ExcelJS.Workbook }) => {
+const UniverSheet = ({ workBook }: { workBook: ExcelJS.Workbook }) => {
   const containerRef = useRef(null);
 
   const init = (workBook: ExcelJS.Workbook) => {
@@ -62,8 +61,6 @@ const UniverSheet = ({ buffer, workBook }: { buffer: ArrayBuffer, workBook: Exce
     univer.registerPlugin(UniverSheetsUIPlugin);
     univer.registerPlugin(UniverSheetsFormulaPlugin);
     univer.registerPlugin(UniverSheetsFormulaUIPlugin);
-
-    console.log('workBook', workBook);
     
     if (workBook) {
       // univerAPI.value.importXLSXToSnapshot(file).then((res) => {
@@ -83,9 +80,6 @@ const UniverSheet = ({ buffer, workBook }: { buffer: ArrayBuffer, workBook: Exce
       (ExceljsWorkSheet as any)._rows.forEach((r) => {
         sheet?.setRowHeight(r.number - 1, r.height);
       })
-
-      console.log(sheet);
-
       // sheet?.setRowHeights(11, 1000, 80);
     }
   };

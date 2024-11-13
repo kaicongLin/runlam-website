@@ -1,10 +1,10 @@
 import ExcelJS from "exceljs";
-import { IDeliveryItem, IDeliveryItems } from "./intefaces";
+import { IDeliveryItem, IDeliveryItems } from "./_intefaces";
 import {
   SHEET_NAME,
   deliveryExcelCloumnsMap,
   deliveryExcelColumns,
-} from "./data";
+} from "./_data";
 import {
   Workbook as ExceljsWorkbook,
   Worksheet as ExceljsWorksheet,
