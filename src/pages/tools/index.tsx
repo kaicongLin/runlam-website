@@ -11,8 +11,7 @@ import BasicInfo from "./_BasicInfo";
 import { readDeliveryExcel, downloadFile } from "./_utils";
 import _ from "lodash";
 import { generateLSPackingList } from "./_exportPackingList";
-// import UniverSheet from "./_UniverSheet";
-
+import LuckySheet from "./_Luckysheet";
 interface basicInfoRefProps {
   getFieldsValue: () => BasicInfoFieldType;
 }
@@ -86,7 +85,7 @@ export default function Hello() {
    *  生成装箱单模板
    */
   const generate = async (fileList?: UploadFile<any>[]) => {
-    const basicValues = basicInfoRef.current?.getFieldsValue();
+    const basicValues = basicInfoRef.current?.getFieldsValue() || {};
     let data = [];
     // 如果有文件列表，则读取文件内容
     console.log(fileList);
@@ -109,7 +108,7 @@ export default function Hello() {
    *  导出装箱单
    */
   const handleExportPackingList = async () => {
-    const basicValues = basicInfoRef.current?.getFieldsValue();
+    const basicValues = basicInfoRef.current?.getFieldsValue() || {};
     // workbook 转成 buffer 文件并下载
     const totalRollNumber = data.reduce(
       (acc, cur) => acc + cur.deliveryList.length,
@@ -153,7 +152,7 @@ export default function Hello() {
         {/* <Table columns={columns} dataSource={dataSource} /> */}
         <div className={styles["delivery-content"]}>
           <div className={styles["excel-preview"]}>
-            {/* <UniverSheet workBook={workbook} /> */}
+            <LuckySheet buffer={buffer} />
           </div>
           <div className={styles["deliver-right"]}>
             <div className={styles["first"]}>
