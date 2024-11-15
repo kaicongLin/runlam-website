@@ -21,14 +21,14 @@ const LuckySheet = ({ buffer }: { buffer: ArrayBuffer }) => {
           container: "excel", //luckysheet is the container id
           lang: "zh",
           // showtoolbar: false, //是否显示工具栏
-          // showinfobar: false, //是否显示顶部信息栏
+          showinfobar: false, //是否显示顶部信息栏
           // showsheetbar: false, //是否显示底部sheet页按钮
           // allowCopy: false, //是否允许拷贝
           // allowEdit: false, //是否允许编辑
           // showstatisticBar: false,//是否显示底部计数栏
           // sheetFormulaBar: false, //是否显示公示栏
           // enableAddRow: false, //是否允许添加行
-          // enableAddBackTop: false, //是否允需回到顶部
+          enableAddBackTop: false, //是否允需回到顶部
           // devicePixelRatio: 10, //设置比例
           data: exportJson.sheets,
           // title: exportJson.info.name,
@@ -52,6 +52,11 @@ const LuckySheet = ({ buffer }: { buffer: ArrayBuffer }) => {
         for (let i = 0; i < tdDom.length; i++) {
           (tdDom[i] as HTMLElement).style.padding = '0px';
         }
+      }
+
+      const scrollbar = document.getElementsByClassName('luckysheet-scrollbar-ltr');
+      for (let i = 0; i < scrollbar.length; i++) {
+        (scrollbar[i] as HTMLElement).style.zIndex = '1';
       }
     }, 100)
     
