@@ -5,6 +5,11 @@ import {
   deliveryExcelCloumnsMap,
   deliveryExcelColumns,
 } from "./_data";
+import Docxtemplater from "docxtemplater";
+import PizZip from "pizzip";
+import PizZipUtils from "pizzip/utils/index.js";
+import expressionParser from "docxtemplater/expressions";
+import JSZip from "jszip";
 
 /**
  * 读取送货Excel文件
@@ -89,13 +94,11 @@ export const downloadFile = (data: any, filename?: string) => {
  * buffer流转文件流
  * @param buffer
  * @param fileName
- * @param mimeType
  * @returns
  */
-export const bufferToFile = (
+export const excelBufferToFile = (
   buffer: ArrayBuffer,
-  fileName: string,
-  mimeType?: string
+  fileName?: string,
 ) => {
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -147,3 +150,38 @@ export function getColumnsLetter(key: string) {
   const number = deliveryExcelColumns.findIndex((item) => item.key === key) + 1;
   return numberToLetter(number);
 }
+
+/**
+ * 生成word文档
+ * @param data word数据
+ * @param jszip 压缩包对象
+ * @returns Promise<Blob>
+ */
+export const generateDocument = (data: any, jszip: JSZip) => {
+  return new Promise((resolve, reject) => {
+    PizZipUtils.getBinaryContent(
+      "/runlam-website/template/LStemplate.docx",
+      (error: any, content: any) => {
+        if (error) {
+          throw error;
+        }
+        const zip = new PizZip(content);
+        const doc = new Docxtemplater(zip, {
+          paragraphLoop: true,
+          linebreaks: true,
+          parser: expressionParser,
+        });
+        doc.render(data);
+        const out = doc.getZip().generate({
+          type: "blob",
+          mimeType:
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }); //Output the document using Data-URI
+
+        jszip.file(data.fileName + ".docx", out);
+        return resolve(out);
+        //   saveAs(out, data.fileName + ".docx");
+      }
+    );
+  });
+};

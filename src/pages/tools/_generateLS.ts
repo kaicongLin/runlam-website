@@ -1,6 +1,10 @@
 import ExcelJS from "exceljs";
 import moment from "moment";
-import { IDeliveryItems, BasicInfoFieldType } from "./_intefaces";
+import {
+  IDeliveryItems,
+  BasicInfoFieldType,
+  IDeliveryItem,
+} from "./_intefaces";
 import {
   deliveryExcelColumns,
   TABLE_START_ROW,
@@ -18,10 +22,13 @@ const borderStyle: ExcelJS.Borders = {
 
 /**
  * 构建excel模板信息
- * @param worksheet 
- * @param basicValues 
+ * @param worksheet
+ * @param basicValues
  */
-const fillBasicInfo = (worksheet: ExcelJS.Worksheet, basicValues: BasicInfoFieldType) => {
+const fillBasicInfo = (
+  worksheet: ExcelJS.Worksheet,
+  basicValues: BasicInfoFieldType
+) => {
   // 基础信息
   worksheet.getCell("A1").value = "Lintas Company Limited";
   worksheet.getCell("A2").value =
@@ -54,23 +61,29 @@ const fillBasicInfo = (worksheet: ExcelJS.Worksheet, basicValues: BasicInfoField
     });
   });
 
-    // 构建表头，表格从第10行开始
-    worksheet.getRow(TABLE_START_ROW).values = deliveryExcelColumns.map(
-      (item) => item.englishName
-    );
-    worksheet.getRow(TABLE_START_ROW).font = {
-      name: "Tahoma",
-      size: 11,
-    };
-    worksheet.getRow(TABLE_START_ROW + 1).values = deliveryExcelColumns.map(
-      (item) => item.name
-    );
-    worksheet.getRow(TABLE_START_ROW + 1).font = {
-      name: "Tahoma",
-      size: 11,
-    };
-}
+  // 构建表头，表格从第10行开始
+  worksheet.getRow(TABLE_START_ROW).values = deliveryExcelColumns.map(
+    (item) => item.englishName
+  );
+  worksheet.getRow(TABLE_START_ROW).font = {
+    name: "Tahoma",
+    size: 11,
+  };
+  worksheet.getRow(TABLE_START_ROW + 1).values = deliveryExcelColumns.map(
+    (item) => item.name
+  );
+  worksheet.getRow(TABLE_START_ROW + 1).font = {
+    name: "Tahoma",
+    size: 11,
+  };
+};
 
+/**
+ * 生成灵达装箱单
+ * @param basicValues
+ * @param data
+ * @returns
+ */
 export const generateLSPackingList = async (
   basicValues: BasicInfoFieldType,
   data: IDeliveryItems[]
@@ -107,11 +120,16 @@ export const generateLSPackingList = async (
       const firstPart = parts[0] + "-" + parts[1] + "-";
       const secondPart = parts[2];
       case_number_index++;
+      const case_number = `${firstPart}${
+        Number(secondPart) + case_number_index
+      }`;
+      delivery.case_number = case_number;
+      delivery.unit = delivery.unit === "Y" ? "YD" : delivery.unit;
 
       // 产品号映射成分
       const compostion = productNumberToCompostionMap[delivery.product_number];
       return {
-        case_number: `${firstPart}${Number(secondPart) + case_number_index}`,
+        case_number: case_number,
         roll_qty: Number(basicValues.roll_qty),
         unit: basicValues.unit,
         order_no: delivery.customer_order_number ?? "error",
@@ -120,7 +138,7 @@ export const generateLSPackingList = async (
         color: delivery.color_name ?? "error",
         width: basicValues.width,
         qty: delivery.quantity ?? "error",
-        length_unit: delivery.unit === "Y" ? "YD" : delivery.unit ?? "error",
+        length_unit: delivery.unit ?? "error",
         net_weight: delivery.net_total_kg ?? "error",
         gross_weight: delivery.net_total_kg
           ? delivery.net_total_kg + 0.5
@@ -252,26 +270,45 @@ export const generateLSPackingList = async (
     row.getCell(10).value = { formula: `K${subSummaryNumber}` };
     row.getCell(11).value = "GROSS:";
     row.getCell(12).value = { formula: `L${subSummaryNumber}` };
-    row.getCell(13).value = { formula: `N${subSummaryNumber - item.deliveryList.length}` };
+    row.getCell(13).value = {
+      formula: `N${subSummaryNumber - item.deliveryList.length}`,
+    };
 
     row.font = {
       name: "Tahoma",
       size: 10,
-    }
+    };
     worksheet.mergeCells(`M${row.number}:N${row.number}`);
   });
-  
+
   // 总汇总
-  const totalSummaryRow = worksheet.getRow(worksheet.lastRow.number + 1)
+  const totalSummaryRow = worksheet.getRow(worksheet.lastRow.number + 1);
   totalSummaryRow.getCell(4).value = "TOTAL:";
   totalSummaryRow.getCell(5).value = "rolls";
-  totalSummaryRow.getCell(6).value = { formula: `SUM(F${summary_start_number}:F${summary_start_number + data.length - 1})` };
-  totalSummaryRow.getCell(7).value = data[0].deliveryList[0].unit === "Y" ? "YD" : data[0].deliveryList[0].unit;
-  totalSummaryRow.getCell(8).value = { formula: `SUM(H${summary_start_number}:H${summary_start_number + data.length - 1})`}
+  totalSummaryRow.getCell(6).value = {
+    formula: `SUM(F${summary_start_number}:F${
+      summary_start_number + data.length - 1
+    })`,
+  };
+  totalSummaryRow.getCell(7).value =
+    data[0].deliveryList[0].unit === "Y" ? "YD" : data[0].deliveryList[0].unit;
+  totalSummaryRow.getCell(8).value = {
+    formula: `SUM(H${summary_start_number}:H${
+      summary_start_number + data.length - 1
+    })`,
+  };
   totalSummaryRow.getCell(9).value = "NET:";
-  totalSummaryRow.getCell(10).value = { formula: `SUM(J${summary_start_number}:J${summary_start_number + data.length - 1})` };
+  totalSummaryRow.getCell(10).value = {
+    formula: `SUM(J${summary_start_number}:J${
+      summary_start_number + data.length - 1
+    })`,
+  };
   totalSummaryRow.getCell(11).value = "GROSS:";
-  totalSummaryRow.getCell(12).value = { formula: `SUM(L${summary_start_number}:L${summary_start_number + data.length - 1})` };
+  totalSummaryRow.getCell(12).value = {
+    formula: `SUM(L${summary_start_number}:L${
+      summary_start_number + data.length - 1
+    })`,
+  };
   totalSummaryRow.eachCell((cell) => {
     cell.border = borderStyle;
     cell.fill = {
@@ -285,7 +322,7 @@ export const generateLSPackingList = async (
       bold: true,
       color: { argb: "FFFF0000" },
     };
-  })
+  });
 
   // 设置excel字体样式
   worksheet.eachRow((row, rowNumber) => {
@@ -315,4 +352,41 @@ export const generateLSPackingList = async (
   // return buffer;
 
   return workbook;
+};
+
+/**
+ * 生成灵达标签
+ * @param item
+ * @param basicValues
+ */
+export const generateLSTag = (
+  item: IDeliveryItems,
+  basicValues: BasicInfoFieldType
+) => {
+  const wordData = {
+    fileName: "灵达标导出",
+    list: [],
+  };
+  wordData.fileName =
+    "灵达标 " +
+    item.deliveryList[0].product_number +
+    " " +
+    item.deliveryList[0].color_number +
+    " " +
+    item.deliveryList.length +
+    " 卷";
+  item.deliveryList.forEach((delivery) => {
+    wordData.list.push({
+      case_number: delivery.case_number,
+      customer_order_number: delivery.customer_order_number,
+      product_number: delivery.product_number,
+      customer_color_number: delivery.customer_color_number,
+      meas: "20*20*150",
+      quantity: delivery.quantity,
+      unit: delivery.unit,
+      packing_list_no: basicValues.packing_list_no,
+    });
+  });
+
+  return wordData;
 };

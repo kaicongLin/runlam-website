@@ -3,7 +3,7 @@ import React from "react";
 import { BasicInfoFieldType } from "./_intefaces";
 import styles from "./index.module.scss";
 
-type BasicInfoRefProps = {
+export type BasicInfoRefProps = {
   getFieldsValue: () => BasicInfoFieldType;
 };
 

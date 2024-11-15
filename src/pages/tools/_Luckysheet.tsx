@@ -12,11 +12,9 @@ const LuckySheet = ({ buffer }: { buffer: ArrayBuffer }) => {
   const init = () => {
     LuckyExcel.transformExcelToLucky(buffer, (exportJson, luckysheetfile) => {
       exportJson.sheets[0].zoomRatio = 1;
-      console.log("exportJson", exportJson);
-      console.log("window.luckysheet", window.luckysheet);
+      // console.log("exportJson", exportJson);
+      // console.log("window.luckysheet", window.luckysheet);
       if (window.luckysheet && window.luckysheet.create) {
-        console.log("inner", window.luckysheet.create);
-
         window.luckysheet?.create({
           container: "excel", //luckysheet is the container id
           lang: "zh",

@@ -3,29 +3,40 @@ import Layout from "@theme/Layout";
 import ExcelJS from "exceljs";
 import { UploadOutlined } from "@ant-design/icons";
 import type { UploadFile, UploadProps } from "antd";
-import { Button, message, Upload, Affix } from "antd";
-import { IDeliveryItems, BasicInfoFieldType } from "./_intefaces";
+import { Button, message, Upload, Affix, Table } from "antd";
+import { IDeliveryItems } from "./_intefaces";
 import { deliveryExcelCloumnsMap } from "./_data";
 import styles from "./index.module.scss";
-import BasicInfo from "./_BasicInfo";
-import { readDeliveryExcel, downloadFile } from "./_utils";
+import BasicInfo, { BasicInfoRefProps } from "./_BasicInfo";
+import {
+  readDeliveryExcel,
+  downloadFile,
+  generateDocument,
+  excelBufferToFile,
+} from "./_utils";
 import _ from "lodash";
-import { generateLSPackingList } from "./_exportPackingList";
+import { generateLSPackingList, generateLSTag } from "./_generateLS";
 import LuckySheet from "./_Luckysheet";
-interface basicInfoRefProps {
-  getFieldsValue: () => BasicInfoFieldType;
+import JSZip from "jszip";
+import moment from "moment";
+import { saveAs } from "file-saver";
+
+interface IColumns {
+  title: string;
+  dataIndex: string;
+  key: string;
 }
 
 export default function Hello() {
   const [data, setData] = React.useState<IDeliveryItems[]>([]);
-  const [columns, setColumns] = React.useState<any[]>([]);
+  const [columns, setColumns] = React.useState<IColumns[]>([]);
   const [fileList, setFileList] = React.useState<UploadFile[]>([]);
   const [buffer, setBuffer] = React.useState<ArrayBuffer>();
   const [workbook, setWorkbook] = React.useState<ExcelJS.Workbook | null>(null);
   const removeFlag = useRef<boolean>(false);
 
   const fileCount = useRef<number>(0);
-  const basicInfoRef = useRef<basicInfoRefProps>();
+  const basicInfoRef = useRef<BasicInfoRefProps>();
 
   const props: UploadProps = {
     name: "file",
@@ -86,20 +97,19 @@ export default function Hello() {
    */
   const generate = async (fileList?: UploadFile<any>[]) => {
     const basicValues = basicInfoRef.current?.getFieldsValue() || {};
-    let data = [];
+    let data: IDeliveryItems[] = [];
     // 如果有文件列表，则读取文件内容
-    console.log(fileList);
-
     if (fileList) {
       data = await readDeliveryExcel(
         fileList.map((file) => file.originFileObj)
       );
-      setData(data);
     }
 
     // 生成新的 装箱单的 workbook 对象
     const workbook = await generateLSPackingList(basicValues, data);
     const buffer = await workbook.xlsx.writeBuffer();
+
+    setData(data);
     setBuffer(buffer);
     setWorkbook(workbook);
   };
@@ -107,7 +117,7 @@ export default function Hello() {
   /**
    *  导出装箱单
    */
-  const handleExportPackingList = async () => {
+  const handleExportPackingList1 = async () => {
     const basicValues = basicInfoRef.current?.getFieldsValue() || {};
     // workbook 转成 buffer 文件并下载
     const totalRollNumber = data.reduce(
@@ -118,6 +128,36 @@ export default function Hello() {
       buffer,
       `${basicValues.invoice_no}装箱单${totalRollNumber}卷.xlsx`
     );
+  };
+
+  /**
+   * 格式化word导出数据
+   * @returns
+   */
+  const handleExportPackingList = async () => {
+    // 初始化一个zip打包对象
+    const zip = new JSZip();
+    const basicValues = basicInfoRef.current?.getFieldsValue() || {};
+
+    // 生成灵达装箱单excel文件
+    const totalRollNumber = data.reduce(
+      (acc, cur) => acc + cur.deliveryList.length,
+      0
+    );
+    const blob = excelBufferToFile(buffer);
+    zip.file(`${basicValues.invoice_no}装箱单${totalRollNumber}卷.xlsx`, blob);
+
+    // 生成灵达标签word文件
+    const promises = data.map(async (item) => {
+      const wordData = generateLSTag(item, basicValues);
+      return await generateDocument(wordData, zip);
+    });
+
+    // 下载压缩包
+    await Promise.all(promises);
+    zip.generateAsync({ type: "blob" }).then((blob) => {
+      saveAs(blob, `灵达出货${moment().format("YYYY-MM-DD")}.zip`);
+    });
   };
 
   /**
@@ -132,7 +172,7 @@ export default function Hello() {
 
   useEffect(() => {
     // 遍历对象的键值对
-    const columns = [];
+    const columns: IColumns[] = [];
     for (const [key, val] of Object.entries(deliveryExcelCloumnsMap)) {
       columns.push({
         title: key,
@@ -140,12 +180,18 @@ export default function Hello() {
         key: val,
       });
     }
+    columns.push({
+      title: "箱号",
+      dataIndex: "case_number",
+      key: "case_number",
+    });
     setColumns(columns);
     // handleExportPackingList();
     generate();
   }, []);
 
   const dataSource = _.flatMap(data, (item) => item.deliveryList);
+
   return (
     <Layout title="Hello" description="Hello React Page">
       <div className={styles["delivery-wrap"]}>
@@ -158,7 +204,7 @@ export default function Hello() {
             <div className={styles["first"]}>
               <span style={{ marginRight: "8px" }}>
                 <div className={styles["step"]}>1</div>
-                上传送货单
+                上传系统送货单
               </span>
               <Upload {...props}>
                 <Button type="primary" icon={<UploadOutlined />}>
@@ -182,11 +228,11 @@ export default function Hello() {
             <div className={styles["third"]}>
               <span style={{ marginRight: "8px" }}>
                 <div className={styles["step"]}>3</div>
-                导出装箱单
+                导出装箱单和标签
               </span>
               <Affix offsetBottom={0}>
                 <Button type="primary" onClick={handleExportPackingList}>
-                  导出装箱单
+                  导出
                 </Button>
               </Affix>
             </div>

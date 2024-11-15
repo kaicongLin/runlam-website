@@ -84,6 +84,11 @@ export type IDeliveryItem = {
    * 仓位
    */
   storage_location?: string;
+
+  /**
+   * 自增箱号
+   */
+  case_number?: string;
 };
 
 export interface IDeliveryItems extends IDeliveryItem {
