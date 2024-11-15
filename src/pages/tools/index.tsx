@@ -8,18 +8,14 @@ import { IDeliveryItems } from "./_intefaces";
 import { deliveryExcelCloumnsMap } from "./_data";
 import styles from "./index.module.scss";
 import BasicInfo, { BasicInfoRefProps } from "./_BasicInfo";
-import {
-  readDeliveryExcel,
-  downloadFile,
-  generateDocument,
-  excelBufferToFile,
-} from "./_utils";
+import { readDeliveryExcel, excelBufferToFile } from "./_utils";
 import _ from "lodash";
 import { generateLSPackingList, generateLSTag } from "./_generateLS";
 import LuckySheet from "./_Luckysheet";
 import JSZip from "jszip";
 import moment from "moment";
 import { saveAs } from "file-saver";
+import BrowserOnly from "@docusaurus/BrowserOnly";
 
 interface IColumns {
   title: string;
@@ -115,52 +111,6 @@ export default function Hello() {
   };
 
   /**
-   *  导出装箱单
-   */
-  const handleExportPackingList1 = async () => {
-    const basicValues = basicInfoRef.current?.getFieldsValue() || {};
-    // workbook 转成 buffer 文件并下载
-    const totalRollNumber = data.reduce(
-      (acc, cur) => acc + cur.deliveryList.length,
-      0
-    );
-    downloadFile(
-      buffer,
-      `${basicValues.invoice_no}装箱单${totalRollNumber}卷.xlsx`
-    );
-  };
-
-  /**
-   * 格式化word导出数据
-   * @returns
-   */
-  const handleExportPackingList = async () => {
-    // 初始化一个zip打包对象
-    const zip = new JSZip();
-    const basicValues = basicInfoRef.current?.getFieldsValue() || {};
-
-    // 生成灵达装箱单excel文件
-    const totalRollNumber = data.reduce(
-      (acc, cur) => acc + cur.deliveryList.length,
-      0
-    );
-    const blob = excelBufferToFile(buffer);
-    zip.file(`${basicValues.invoice_no}装箱单${totalRollNumber}卷.xlsx`, blob);
-
-    // 生成灵达标签word文件
-    const promises = data.map(async (item) => {
-      const wordData = generateLSTag(item, basicValues);
-      return await generateDocument(wordData, zip);
-    });
-
-    // 下载压缩包
-    await Promise.all(promises);
-    zip.generateAsync({ type: "blob" }).then((blob) => {
-      saveAs(blob, `灵达出货${moment().format("YYYY-MM-DD")}.zip`);
-    });
-  };
-
-  /**
    * 清空数据
    */
   const handleClearData = () => {
@@ -194,51 +144,122 @@ export default function Hello() {
 
   return (
     <Layout title="Hello" description="Hello React Page">
-      <div className={styles["delivery-wrap"]}>
-        {/* <Table columns={columns} dataSource={dataSource} /> */}
-        <div className={styles["delivery-content"]}>
-          <div className={styles["excel-preview"]}>
-            <LuckySheet buffer={buffer} />
-          </div>
-          <div className={styles["deliver-right"]}>
-            <div className={styles["first"]}>
-              <span style={{ marginRight: "8px" }}>
-                <div className={styles["step"]}>1</div>
-                上传系统送货单
-              </span>
-              <Upload {...props}>
-                <Button type="primary" icon={<UploadOutlined />}>
-                  Upload
-                </Button>
-                {/* <InfoCircleOutlined /> */}
-                {/* <Button icon={<ClearOutlined />} onClick={handleClearData}>
-                清空上传数据
-              </Button> */}
-              </Upload>
-            </div>
-            <div className={styles["second"]}>
-              <div className={styles["step"]}>2</div>
-              修改核对字段信息
-              <BasicInfo
-                ref={basicInfoRef}
-                onFormValueChange={_.debounce(() => generate(fileList), 500)}
-              />
-            </div>
+      <BrowserOnly fallback={<div>Loading...</div>}>
+        {() => {
+          const Docxtemplater = require("docxtemplater");
+          const PizZip = require("pizzip");
+          const PizZipUtils = require("pizzip/utils/index.js");
+          const expressionParser = require("docxtemplater/expressions");
+          const generateDocument = (data: any, jszip: JSZip) => {
+            return new Promise((resolve, reject) => {
+              PizZipUtils.getBinaryContent(
+                "/runlam-website/template/LStemplate.docx",
+                (error: any, content: any) => {
+                  if (error) {
+                    throw error;
+                  }
+                  const zip = new PizZip(content);
+                  const doc = new Docxtemplater(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                    parser: expressionParser,
+                  });
+                  doc.render(data);
+                  const out = doc.getZip().generate({
+                    type: "blob",
+                    mimeType:
+                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                  }); //Output the document using Data-URI
 
-            <div className={styles["third"]}>
-              <span style={{ marginRight: "8px" }}>
-                <div className={styles["step"]}>3</div>
-                导出装箱单和标签
-              </span>
-              <Affix offsetBottom={0}>
-                <Button type="primary" onClick={handleExportPackingList}>
-                  导出
-                </Button>
-              </Affix>
+                  jszip.file(data.fileName + ".docx", out);
+                  return resolve(out);
+                  //   saveAs(out, data.fileName + ".docx");
+                }
+              );
+            });
+          };
+
+          const handleExport = async () => {
+            // 初始化一个zip打包对象
+            const zip = new JSZip();
+            const basicValues = basicInfoRef.current?.getFieldsValue() || {};
+
+            // 生成灵达装箱单excel文件
+            const totalRollNumber = data.reduce(
+              (acc, cur) => acc + cur.deliveryList.length,
+              0
+            );
+            const blob = excelBufferToFile(buffer);
+            zip.file(
+              `${basicValues.invoice_no}装箱单${totalRollNumber}卷.xlsx`,
+              blob
+            );
+
+            // 生成灵达标签word文件
+            const promises = data.map(async (item) => {
+              const wordData = generateLSTag(item, basicValues);
+              return await generateDocument(wordData, zip);
+            });
+
+            // 下载压缩包
+            await Promise.all(promises);
+            zip.generateAsync({ type: "blob" }).then((blob) => {
+              saveAs(blob, `灵达出货${moment().format("YYYY-MM-DD")}.zip`);
+            });
+          };
+
+          return (
+            <div className={styles["delivery-wrap"]}>
+              {/* <Table columns={columns} dataSource={dataSource} /> */}
+              <div className={styles["delivery-content"]}>
+                <div className={styles["excel-preview"]}>
+                  <LuckySheet buffer={buffer} />
+                </div>
+                <div className={styles["deliver-right"]}>
+                  <div className={styles["first"]}>
+                    <span style={{ marginRight: "8px" }}>
+                      <div className={styles["step"]}>1</div>
+                      上传系统送货单
+                    </span>
+                    <Upload {...props}>
+                      <Button type="primary" icon={<UploadOutlined />}>
+                        Upload
+                      </Button>
+                      {/* <InfoCircleOutlined /> */}
+                      {/* <Button icon={<ClearOutlined />} onClick={handleClearData}>
+            清空上传数据
+          </Button> */}
+                    </Upload>
+                  </div>
+                  <div className={styles["second"]}>
+                    <div className={styles["step"]}>2</div>
+                    修改核对字段信息
+                    <BasicInfo
+                      ref={basicInfoRef}
+                      onFormValueChange={_.debounce(
+                        () => generate(fileList),
+                        500
+                      )}
+                    />
+                  </div>
+
+                  <div className={styles["third"]}>
+                    <span style={{ marginRight: "8px" }}>
+                      <div className={styles["step"]}>3</div>
+                      导出装箱单和标签
+                    </span>
+                    <Affix offsetBottom={0}>
+                      <Button type="primary" onClick={handleExport}>
+                        导出
+                      </Button>
+                    </Affix>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          );
+        }}
+      </BrowserOnly>
     </Layout>
   );
 }
