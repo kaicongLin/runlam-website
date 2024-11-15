@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkrunlam_website=self.webpackChunkrunlam_website||[]).push([[446],{78810:e=>{e.exports=JSON.parse('{"metadata":{"permalink":"/runlam-website/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":4,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
