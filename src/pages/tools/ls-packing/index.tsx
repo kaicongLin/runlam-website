@@ -32,7 +32,7 @@ export default function Hello() {
   const removeFlag = useRef<boolean>(false);
 
   const fileCount = useRef<number>(0);
-  const basicInfoRef = useRef<BasicInfoRefProps>();
+  const basicInfoRef = useRef<BasicInfoRefProps>(null);
 
   const props: UploadProps = {
     name: "file",

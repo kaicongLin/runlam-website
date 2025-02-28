@@ -79,7 +79,23 @@ const config: Config = {
           label: "Tutorial",
         },
         { to: "/blog", label: "Blog", position: "left" },
-        { to: "/tools/", label: "Tool", position: "left" },
+        {
+          type: 'dropdown',
+          position: 'left',
+          label: 'Tool',
+          items: [
+            {
+              label: '灵达装箱单',
+              to: '/tools/ls-packing',
+            },
+            {
+              lable: '新永胜送货单',
+              to: '/tools/xys-delivery',
+            }
+            // 这里可以继续添加更多工具项
+          ],
+        },
+        // { to: "/tools/", label: "Tool", position: "left" },
         {
           href: "https://github.com/facebook/docusaurus",
           label: "GitHub",
